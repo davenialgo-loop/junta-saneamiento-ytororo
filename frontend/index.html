@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0F6E56">
+<meta name="description" content="Junta de Saneamiento Ytororo - Gestión de medidores de agua">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<title>Junta Saneamiento - Ytororo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="/css/style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="/js/db.js"></script>
+<script defer src="/js/sync.js"></script>
+<script defer src="/js/export.js"></script>
+<script defer src="/js/app.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon"><i class="ti ti-droplet" style="font-size:18px"></i></div>
+  <div><h1>Junta de Saneamiento — Ytororo</h1><p>Distrito de Capitán Miranda</p></div>
+  <div id="sync-status"></div>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="showSection('dashboard',this)"><i class="ti ti-layout-dashboard"></i> Inicio</button>
+  <button onclick="showSection('usuarios',this)"><i class="ti ti-users"></i> Usuarios</button>
+  <button onclick="showSection('lecturas',this)"><i class="ti ti-meter"></i> Lecturas</button>
+  <button onclick="showSection('reportes',this)"><i class="ti ti-file-export"></i> Exportar</button>
+  <button onclick="showSection('config',this)"><i class="ti ti-settings"></i> Tarifas</button>
+</div>
+
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section active">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="val" id="stat-u">0</div><div class="lbl">Usuarios</div></div>
+      <div class="stat-card"><div class="val" id="stat-l">0</div><div class="lbl">Lecturas este mes</div></div>
+      <div class="stat-card"><div class="val" id="stat-t">Gs. 0</div><div class="lbl">Total a cobrar</div></div>
+    </div>
+    <div class="card"><h3><i class="ti ti-alert-circle"></i> Pendientes este mes</h3><div id="dash-pending"></div></div>
+    <div class="card"><h3><i class="ti ti-clock"></i> Últimas lecturas</h3><div id="dash-recent"></div></div>
+  </div>
+
+  <!-- USUARIOS -->
+  <div id="section-usuarios" class="section">
+    <div class="card">
+      <h3>Nuevo usuario</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Nombre</label><input id="u-nom" type="text" placeholder="Juan" autocomplete="given-name"></div>
+        <div class="form-group"><label>Apellido</label><input id="u-ape" type="text" placeholder="Pérez" autocomplete="family-name"></div>
+        <div class="form-group"><label>N° Medidor</label><input id="u-med" type="text" placeholder="MED-001" autocomplete="off"></div>
+        <div class="form-group"><label>Dirección / Lote</label><input id="u-dir" type="text" placeholder="Lote 12" autocomplete="street-address"></div>
+        <div class="form-group"><label>Teléfono</label><input id="u-tel" type="tel" placeholder="0981 000 000" autocomplete="tel"></div>
+        <div class="form-group"><label>Lectura inicial (m³)</label><input id="u-ini" type="number" placeholder="0" min="0" step="0.1"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-primary" onclick="agregarUsuario()"><i class="ti ti-user-plus"></i> Registrar</button>
+      </div>
+    </div>
+    <div class="filter-row"><input type="text" id="buscar-u" placeholder="Buscar por nombre o medidor..." oninput="renderUsuarios()"></div>
+    <div id="lista-usuarios"></div>
+  </div>
+
+  <!-- LECTURAS -->
+  <div id="section-lecturas" class="section">
+    <div class="card">
+      <h3>Registrar lectura</h3>
+      <div class="lectura-form">
+        <div class="form-group"><label>Usuario</label><select id="l-usu"><option value="">— Seleccionar —</option></select></div>
+        <div class="form-group"><label>Mes</label><select id="l-mes"></select></div>
+        <div class="form-group"><label>Año</label><select id="l-anio"></select></div>
+      </div>
+      <div class="form-grid" style="margin-top:9px">
+        <div class="form-group"><label>Lectura anterior (m³)</label><input id="l-ant" type="number" readonly style="background:#f0f2f4" step="0.1"></div>
+        <div class="form-group"><label>Lectura actual (m³)</label><input id="l-act" type="number" placeholder="0" min="0" step="0.1" oninput="calcConsumo()" inputmode="decimal"></div>
+      </div>
+      <div id="l-result"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:7px">
+        <button class="btn btn-print" id="btn-recibo" style="display:none" onclick="abrirRecibo()"><i class="ti ti-printer"></i> Vista recibo</button>
+        <button class="btn btn-primary" onclick="guardarLectura()"><i class="ti ti-device-floppy"></i> Guardar lectura</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Historial</h3>
+      <div class="filter-row">
+        <select id="filt-usu" onchange="renderHistorial()" style="flex:2"></select>
+        <select id="filt-mes" onchange="renderHistorial()"><option value="">Todos los meses</option></select>
+      </div>
+      <div id="historial"></div>
+    </div>
+  </div>
+
+  <!-- EXPORTAR -->
+  <div id="section-reportes" class="section">
+    <div class="card">
+      <h3><i class="ti ti-table-export"></i> Exportar a Excel</h3>
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">Genera un archivo .xlsx con el listado de usuarios y sus lecturas.</p>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label>Mes</label><select id="exp-mes"></select></div>
+        <div class="form-group"><label>Año</label><select id="exp-anio"></select></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-excel" onclick="exportarExcel()"><i class="ti ti-file-spreadsheet"></i> Descargar Excel</button>
+        <button class="btn btn-secondary" onclick="exportarUsuariosExcel()"><i class="ti ti-users"></i> Exportar padrón</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="ti ti-file-text"></i> Reporte mensual PDF / Impresión</h3>
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">Genera un reporte mensual con todos los consumos e importes para imprimir o guardar como PDF.</p>
+      <div class="form-grid" style="margin-bottom:12px">
+        <div class="form-group"><label>Mes</label><select id="rep-mes"></select></div>
+        <div class="form-group"><label>Año</label><select id="rep-anio"></select></div>
+      </div>
+      <button class="btn btn-pdf" onclick="generarReportePDF()"><i class="ti ti-printer"></i> Generar e imprimir reporte</button>
+    </div>
+    <div class="card">
+      <h3><i class="ti ti-receipt"></i> Recibos individuales</h3>
+      <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">Seleccioná un usuario y mes para generar su recibo de pago.</p>
+      <div class="lectura-form" style="margin-bottom:12px">
+        <div class="form-group"><label>Usuario</label><select id="rec-usu"></select></div>
+        <div class="form-group"><label>Mes</label><select id="rec-mes"></select></div>
+        <div class="form-group"><label>Año</label><select id="rec-anio"></select></div>
+      </div>
+      <button class="btn btn-print" onclick="imprimirReciboDesdeExportar()"><i class="ti ti-printer"></i> Generar recibo</button>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="section-config" class="section">
+    <div class="card">
+      <h3>Configuración de tarifas</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>Consumo mínimo (m³)</label><input id="cfg-min" type="number" value="5" min="0" step="0.1"></div>
+        <div class="form-group"><label>Tarifa mínima (Gs.)</label><input id="cfg-tmin" type="number" value="15000" min="0"></div>
+        <div class="form-group"><label>Precio por m³ adicional (Gs.)</label><input id="cfg-pm3" type="number" value="3000" min="0"></div>
+        <div class="form-group"><label>Recargo por mora (%)</label><input id="cfg-mora" type="number" value="10" min="0" max="100"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-primary" onclick="guardarConfig()"><i class="ti ti-check"></i> Guardar</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Simulador</h3>
+      <div class="lectura-form">
+        <div class="form-group"><label>Consumo (m³)</label><input id="sim-m3" type="number" placeholder="10" min="0" step="0.1" oninput="simular()" inputmode="decimal"></div>
+        <div class="form-group"><label>¿Con mora?</label><select id="sim-mora" onchange="simular()"><option value="0">No</option><option value="1">Sí</option></select></div>
+        <div></div>
+      </div>
+      <div id="sim-res" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- MODAL EDITAR USUARIO -->
+<div class="modal-bg" id="modal-edit" onclick="if(event.target===this)cerrarModal('modal-edit')">
+  <div class="modal">
+    <h2>Editar usuario</h2>
+    <input type="hidden" id="edit-id">
+    <div class="form-grid">
+      <div class="form-group"><label>Nombre</label><input id="edit-nom" type="text"></div>
+      <div class="form-group"><label>Apellido</label><input id="edit-ape" type="text"></div>
+      <div class="form-group"><label>N° Medidor</label><input id="edit-med" type="text"></div>
+      <div class="form-group"><label>Dirección</label><input id="edit-dir" type="text"></div>
+      <div class="form-group"><label>Teléfono</label><input id="edit-tel" type="tel"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-edit')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECIBO -->
+<div class="modal-bg" id="modal-recibo" onclick="if(event.target===this)cerrarModal('modal-recibo')">
+  <div class="modal" style="max-width:440px">
+    <h2>Recibo de pago</h2>
+    <div id="recibo-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-recibo')">Cerrar</button>
+      <button class="btn btn-print" onclick="imprimirRecibo()"><i class="ti ti-printer"></i> Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+
+document.addEventListener('DOMContentLoaded', () => { init(); });
+</script>
+
+</body>
+</html>
