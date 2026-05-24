@@ -324,7 +324,59 @@ function initExportSelects() {
   });
 }
 
+function handleLogin() {
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value.trim();
+  const errEl = document.getElementById('login-error');
+  if (!user || !pass) { errEl.textContent = 'Completá ambos campos.'; return; }
+  if (login(user, pass)) {
+    document.getElementById('login-screen').classList.add('hidden');
+    applyAuth();
+    init();
+  } else {
+    errEl.textContent = 'Usuario o contraseña incorrectos.';
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.getElementById('login-screen') && !document.getElementById('login-screen').classList.contains('hidden')) {
+    handleLogin();
+  }
+});
+
+function applyAuth() {
+  if (!currentUser) return;
+  const badge = document.getElementById('user-badge');
+  document.getElementById('user-name').innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${currentUser.nombre} <span class="role-badge">${currentUser.role === 'admin' ? 'Admin' : 'Lector'}</span>`;
+  badge.style.display = 'flex';
+
+  document.querySelectorAll('.nav button').forEach(btn => {
+    const section = btn.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
+    if (section && !hasAccess(section)) {
+      btn.style.display = 'none';
+    }
+  });
+
+  if (currentUser.role === 'lector') {
+    const firstAccessible = document.querySelector('.nav button:not([style*="display: none"])');
+    if (firstAccessible) {
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      firstAccessible.classList.add('active');
+      const section = firstAccessible.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
+      if (section) showSection(section, firstAccessible);
+    }
+  }
+
+  document.getElementById('card-seed').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+}
+
 async function init() {
+  if (!checkAuth()) {
+    document.getElementById('login-screen').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('login-screen').classList.add('hidden');
+  applyAuth();
   await loadData();
   initSelects();
   poblarSelectU();

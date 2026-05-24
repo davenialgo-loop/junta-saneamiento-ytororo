@@ -36,6 +36,91 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* LOGIN SCREEN */
+.login-overlay {
+  position: fixed; inset: 0;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 1rem;
+}
+.login-overlay.hidden { display: none; }
+.login-box {
+  background: var(--color-card);
+  border: .5px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 2rem 1.5rem;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  text-align: center;
+}
+.login-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  color: var(--color-primary);
+  font-size: 26px;
+}
+.login-box h2 { font-size: 18px; font-weight: 600; margin-bottom: 2px; }
+.login-sub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 20px; }
+.login-form { text-align: left; }
+.login-form .form-group { margin-bottom: 12px; }
+.login-error {
+  font-size: 12px; color: var(--color-danger);
+  margin-bottom: 10px; min-height: 18px;
+}
+.login-hint {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: .5px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.login-hint strong { color: var(--color-text); }
+.badge-admin { background: #E3F2FD; color: #1565C0; }
+.badge-lector { background: #FFF3E0; color: #E65100; }
+
+/* USER BADGE */
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.12);
+  padding: 3px 6px 3px 10px;
+  border-radius: 100px;
+  font-size: 10px;
+  white-space: nowrap;
+  margin-left: 6px;
+}
+.user-badge .role-badge {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 9px;
+  opacity: .8;
+}
+.btn-logout {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: background .15s;
+}
+.btn-logout:active { background: rgba(255,255,255,0.3); }
+
 /* HEADER */
 .header {
   background: var(--color-primary);
