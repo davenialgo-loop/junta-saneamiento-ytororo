@@ -1,7 +1,7 @@
 :root {
-  --color-primary: #0F6E56;
-  --color-primary-dark: #085041;
-  --color-primary-light: #E1F5EE;
+  --color-primary: #1565C0;
+  --color-primary-dark: #0D47A1;
+  --color-primary-light: #E3F2FD;
   --color-danger: #A32D2D;
   --color-excel: #217346;
   --color-pdf: #C0392B;
@@ -175,7 +175,7 @@ select {
 input:focus, select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(15,110,86,.12);
+  box-shadow: 0 0 0 2px rgba(21,101,192,.12);
 }
 
 /* BUTTONS */
@@ -280,7 +280,7 @@ input:focus, select:focus {
 }
 .result-box {
   background: var(--color-primary-light);
-  border: .5px solid #5DCAA5;
+  border: .5px solid #64B5F6;
   border-radius: var(--radius-sm);
   padding: 10px;
   margin-top: 10px;
@@ -295,7 +295,7 @@ input:focus, select:focus {
 .result-row.total {
   font-weight: 600;
   font-size: 14px;
-  border-top: .5px solid #5DCAA5;
+  border-top: .5px solid #64B5F6;
   margin-top: 4px;
   padding-top: 7px;
   color: var(--color-primary);

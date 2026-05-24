@@ -53,15 +53,15 @@ function generarReportePDF() {
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reporte ${MESES[mes]} ${anio}</title>
   <style>
     body{font-family:Arial,sans-serif;padding:24px;color:#000;font-size:12px}
-    h1{font-size:18px;color:#0F6E56;margin:0}
+    h1{font-size:18px;color:#1565C0;margin:0}
     h2{font-size:13px;margin:2px 0 0;color:#555;font-weight:normal}
     .meta{font-size:11px;color:#777;margin-bottom:16px}
     table{width:100%;border-collapse:collapse;margin-top:12px}
-    th{background:#0F6E56;color:white;padding:7px 8px;text-align:left;font-size:11px}
+    th{background:#1565C0;color:white;padding:7px 8px;text-align:left;font-size:11px}
     td{padding:6px 8px;border-bottom:1px solid #eee;font-size:12px}
     tr:nth-child(even) td{background:#f9f9f9}
     .sin{color:#aaa;font-style:italic}
-    .total-row{font-weight:bold;background:#E1F5EE!important}
+    .total-row{font-weight:bold;background:#E3F2FD!important}
     .footer{margin-top:24px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:10px}
     @media print{body{padding:12px}}
   </style></head><body>
@@ -150,10 +150,10 @@ function imprimirRecibo() {
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
   <style>
     body{font-family:Arial,sans-serif;padding:20px;color:#000}
-    .recibo-preview h2{text-align:center;font-size:16px;color:#0F6E56;margin-bottom:4px}
+    .recibo-preview h2{text-align:center;font-size:16px;color:#1565C0;margin-bottom:4px}
     .sub{text-align:center;font-size:12px;color:#555;margin-bottom:14px}
     .rrow{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px dotted #eee}
-    .rtotal{display:flex;justify-content:space-between;font-size:15px;font-weight:bold;padding:8px 0;margin-top:4px;border-top:2px solid #0F6E56;color:#0F6E56}
+    .rtotal{display:flex;justify-content:space-between;font-size:15px;font-weight:bold;padding:8px 0;margin-top:4px;border-top:2px solid #1565C0;color:#1565C0}
     .firma{text-align:center;margin-top:20px;font-size:11px;color:#888;border-top:1px solid #ccc;padding-top:10px}
   </style></head><body>${contenido}
   <script>window.onload=()=>{window.print();}<\/script>
