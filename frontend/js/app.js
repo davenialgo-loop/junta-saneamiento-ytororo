@@ -370,26 +370,23 @@ function applyAuth() {
   document.getElementById('card-seed').style.display = currentUser.role === 'admin' ? 'block' : 'none';
 }
 
-async function loadDataIfNeeded() {
-  if (!usuarios.length && !lecturas.length) {
-    usuarios = await dbAPI.getAll('usuarios') || [];
-    lecturas = await dbAPI.getAll('lecturas') || [];
-    const cfgRows = await dbAPI.getAll('config') || [];
-    cfgRows.forEach(r => { config[r.key] = parseFloat(r.value) || r.value; });
-  }
-}
-
-async function abrirConsultaPublica() {
-  await loadDataIfNeeded();
+function abrirConsultaPublica() {
   document.getElementById('modal-consulta').classList.add('open');
   document.getElementById('consulta-med').value = '';
   document.getElementById('consulta-result').innerHTML = '';
   document.getElementById('consulta-error').textContent = '';
   setTimeout(() => document.getElementById('consulta-med').focus(), 300);
+  if (!usuarios.length && !lecturas.length) {
+    setTimeout(async () => {
+      usuarios = await dbAPI.getAll('usuarios').catch(() => []) || [];
+      lecturas = await dbAPI.getAll('lecturas').catch(() => []) || [];
+      const cfgRows = await dbAPI.getAll('config').catch(() => []) || [];
+      cfgRows.forEach(r => { config[r.key] = parseFloat(r.value) || r.value; });
+    }, 50);
+  }
 }
 
 async function buscarFactura() {
-  await loadDataIfNeeded();
   const med = document.getElementById('consulta-med').value.trim().toUpperCase();
   const errEl = document.getElementById('consulta-error');
   const resultEl = document.getElementById('consulta-result');
