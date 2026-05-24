@@ -24,16 +24,33 @@ function toast(msg) {
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
+function abrirLogin() {
+  document.getElementById('login-modal').classList.add('open');
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+  setTimeout(() => document.getElementById('login-user').focus(), 300);
+}
+
+function volverLanding() {
+  document.getElementById('page-admin').style.display = 'none';
+  document.getElementById('page-landing').style.display = 'block';
+  renderNoticiasPublic();
+}
+
 function showSection(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('section-' + id).classList.add('active');
+  const el = document.getElementById('section-' + id);
+  if (!el) return;
+  el.classList.add('active');
   if (btn) btn.classList.add('active');
   if (id === 'lecturas') { poblarSelectU(); renderHistorial(); }
   if (id === 'usuarios') renderUsuarios();
   if (id === 'dashboard') renderDashboard();
   if (id === 'config') cargarConfig();
   if (id === 'reportes') initExportSelects();
+  if (id === 'noticias') renderNoticiasAdmin();
 }
 
 function initSelects() {
@@ -330,22 +347,24 @@ function handleLogin() {
   const errEl = document.getElementById('login-error');
   if (!user || !pass) { errEl.textContent = 'Completá ambos campos.'; return; }
   if (login(user, pass)) {
-    document.getElementById('login-screen').classList.add('hidden');
-    applyAuth();
-    init();
+    document.getElementById('login-modal').classList.remove('open');
+    mostrarAdmin();
   } else {
     errEl.textContent = 'Usuario o contraseña incorrectos.';
   }
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && document.getElementById('login-screen') && !document.getElementById('login-screen').classList.contains('hidden')) {
+  if (e.key === 'Enter' && document.getElementById('login-modal') && document.getElementById('login-modal').classList.contains('open')) {
     handleLogin();
   }
 });
 
-function applyAuth() {
-  if (!currentUser) return;
+async function mostrarAdmin() {
+  document.getElementById('page-landing').style.display = 'none';
+  document.getElementById('page-admin').style.display = 'flex';
+  document.getElementById('page-admin').style.flexDirection = 'column';
+
   const badge = document.getElementById('user-badge');
   document.getElementById('user-name').innerHTML = `<i class="ti ti-user" style="font-size:10px"></i> ${currentUser.nombre} <span class="role-badge">${currentUser.role === 'admin' ? 'Admin' : 'Lector'}</span>`;
   badge.style.display = 'flex';
@@ -368,30 +387,28 @@ function applyAuth() {
   }
 
   document.getElementById('card-seed').style.display = currentUser.role === 'admin' ? 'block' : 'none';
+
+  await loadData();
+  initSelects();
+  poblarSelectU();
+  renderDashboard();
+  renderNoticiasAdmin();
+  cargarConfig();
+  updateSyncStatus();
+  if (isOnline) syncAll();
 }
 
-function abrirConsultaPublica() {
-  document.getElementById('modal-consulta').classList.add('open');
-  document.getElementById('consulta-med').value = '';
-  document.getElementById('consulta-result').innerHTML = '';
-  document.getElementById('consulta-error').textContent = '';
-  setTimeout(() => document.getElementById('consulta-med').focus(), 300);
-  if (!usuarios.length && !lecturas.length) {
-    setTimeout(async () => {
-      usuarios = await dbAPI.getAll('usuarios').catch(() => []) || [];
-      lecturas = await dbAPI.getAll('lecturas').catch(() => []) || [];
-      const cfgRows = await dbAPI.getAll('config').catch(() => []) || [];
-      cfgRows.forEach(r => { config[r.key] = parseFloat(r.value) || r.value; });
-    }, 50);
-  }
-}
-
-async function buscarFactura() {
-  const med = document.getElementById('consulta-med').value.trim().toUpperCase();
-  const errEl = document.getElementById('consulta-error');
-  const resultEl = document.getElementById('consulta-result');
+async function buscarFacturaLanding() {
+  const med = document.getElementById('lp-consulta-med').value.trim().toUpperCase();
+  const errEl = document.getElementById('lp-consulta-error');
+  const resultEl = document.getElementById('lp-consulta-result');
 
   if (!med) { errEl.textContent = 'Ingresá el número de medidor.'; resultEl.innerHTML = ''; return; }
+
+  if (!usuarios.length && !lecturas.length) {
+    usuarios = await dbAPI.getAll('usuarios').catch(() => []) || [];
+    lecturas = await dbAPI.getAll('lecturas').catch(() => []) || [];
+  }
 
   const u = usuarios.find(x => x.medidor.toUpperCase() === med);
   if (!u) { errEl.textContent = 'No se encontró un usuario con ese medidor.'; resultEl.innerHTML = ''; return; }
@@ -403,7 +420,33 @@ async function buscarFactura() {
   const ultima = userLecturas[0];
   resultEl.innerHTML = buildReciboHTML(ultima, u) + `
     <div style="text-align:center;margin-top:10px">
-      <button class="btn btn-print" onclick="imprimirReciboPublico('${ultima.id}','${u.id}')"><i class="ti ti-printer"></i> Imprimir</button>
+      <button class="btn btn-print btn-sm" onclick="imprimirReciboPublico('${ultima.id}','${u.id}')"><i class="ti ti-printer"></i> Imprimir</button>
+    </div>`;
+}
+
+async function buscarFactura() {
+  const med = document.getElementById('consulta-med')?.value?.trim().toUpperCase() || document.getElementById('lp-consulta-med')?.value?.trim().toUpperCase();
+  const errEl = document.getElementById('consulta-error');
+  const resultEl = document.getElementById('consulta-result');
+
+  if (!med) { if(errEl)errEl.textContent = 'Ingresá el número de medidor.'; if(resultEl)resultEl.innerHTML = ''; return; }
+
+  if (!usuarios.length && !lecturas.length) {
+    usuarios = await dbAPI.getAll('usuarios').catch(() => []) || [];
+    lecturas = await dbAPI.getAll('lecturas').catch(() => []) || [];
+  }
+
+  const u = usuarios.find(x => x.medidor.toUpperCase() === med);
+  if (!u) { if(errEl)errEl.textContent = 'No se encontró un usuario con ese medidor.'; if(resultEl)resultEl.innerHTML = ''; return; }
+
+  const userLecturas = lecturas.filter(l => l.usuarioId === u.id).sort((a, b) => a.anio !== b.anio ? b.anio - a.anio : b.mes - a.mes);
+  if (!userLecturas.length) { if(errEl)errEl.textContent = 'Este usuario aún no tiene lecturas registradas.'; if(resultEl)resultEl.innerHTML = ''; return; }
+
+  if(errEl)errEl.textContent = '';
+  const ultima = userLecturas[0];
+  if(resultEl) resultEl.innerHTML = buildReciboHTML(ultima, u) + `
+    <div style="text-align:center;margin-top:10px">
+      <button class="btn btn-print btn-sm" onclick="imprimirReciboPublico('${ultima.id}','${u.id}')"><i class="ti ti-printer"></i> Imprimir</button>
     </div>`;
 }
 
@@ -428,17 +471,17 @@ function imprimirReciboPublico(lid, uid) {
 }
 
 async function init() {
-  if (!checkAuth()) {
-    document.getElementById('login-screen').classList.remove('hidden');
-    return;
+  document.getElementById('page-landing').style.display = 'block';
+  document.getElementById('page-admin').style.display = 'none';
+
+  usuarios = await dbAPI.getAll('usuarios').catch(() => []) || [];
+  lecturas = await dbAPI.getAll('lecturas').catch(() => []) || [];
+  const cfgRows = await dbAPI.getAll('config').catch(() => []) || [];
+  cfgRows.forEach(r => { config[r.key] = parseFloat(r.value) || r.value; });
+  await cargarNoticias();
+  renderNoticiasPublic();
+
+  if (checkAuth()) {
+    mostrarAdmin();
   }
-  document.getElementById('login-screen').classList.add('hidden');
-  applyAuth();
-  await loadData();
-  initSelects();
-  poblarSelectU();
-  renderDashboard();
-  cargarConfig();
-  updateSyncStatus();
-  if (isOnline) syncAll();
 }

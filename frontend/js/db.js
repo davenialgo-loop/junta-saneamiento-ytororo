@@ -1,5 +1,5 @@
 const DB_NAME = 'junta-ytororo';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -16,6 +16,9 @@ function openDB() {
       }
       if (!db.objectStoreNames.contains('config')) {
         db.createObjectStore('config', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('noticias')) {
+        db.createObjectStore('noticias', { keyPath: 'id' });
       }
       if (!db.objectStoreNames.contains('syncQueue')) {
         db.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });

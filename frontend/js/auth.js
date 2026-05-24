@@ -25,7 +25,8 @@ function login(username, password) {
 function logout() {
   currentUser = null;
   sessionStorage.removeItem('yto_user');
-  location.reload();
+  document.getElementById('page-admin').style.display = 'none';
+  document.getElementById('page-landing').style.display = 'block';
 }
 
 function hasAccess(section) {
