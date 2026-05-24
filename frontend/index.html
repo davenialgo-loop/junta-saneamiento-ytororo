@@ -42,7 +42,27 @@
       <div class="login-hint">
         <div><strong>admin</strong> / admin123 <span class="badge badge-admin">Admin</span></div>
         <div style="margin-top:4px"><strong>lector</strong> / lector123 <span class="badge badge-lector">Lector</span></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:.5px solid var(--color-border)">
+          <button class="btn btn-secondary" onclick="abrirConsultaPublica()" style="width:100%;justify-content:center"><i class="ti ti-receipt"></i> Consultar última factura</button>
+        </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-consulta" onclick="if(event.target===this)cerrarModal('modal-consulta')">
+  <div class="modal" style="max-width:440px">
+    <h2><i class="ti ti-receipt"></i> Consultar última factura</h2>
+    <p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:12px">Ingresá el número de tu medidor para ver tu última factura.</p>
+    <div class="form-group">
+      <label>N° de Medidor</label>
+      <input id="consulta-med" type="text" placeholder="Ej: MED-001" onkeydown="if(event.key==='Enter')buscarFactura()">
+    </div>
+    <div id="consulta-error" style="font-size:12px;color:var(--color-danger);margin-top:6px;min-height:18px"></div>
+    <div id="consulta-result" style="margin-top:10px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-consulta')">Cerrar</button>
+      <button class="btn btn-primary" onclick="buscarFactura()"><i class="ti ti-search"></i> Buscar</button>
     </div>
   </div>
 </div>

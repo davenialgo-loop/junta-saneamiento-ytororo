@@ -370,6 +370,66 @@ function applyAuth() {
   document.getElementById('card-seed').style.display = currentUser.role === 'admin' ? 'block' : 'none';
 }
 
+async function loadDataIfNeeded() {
+  if (!usuarios.length && !lecturas.length) {
+    usuarios = await dbAPI.getAll('usuarios') || [];
+    lecturas = await dbAPI.getAll('lecturas') || [];
+    const cfgRows = await dbAPI.getAll('config') || [];
+    cfgRows.forEach(r => { config[r.key] = parseFloat(r.value) || r.value; });
+  }
+}
+
+async function abrirConsultaPublica() {
+  await loadDataIfNeeded();
+  document.getElementById('modal-consulta').classList.add('open');
+  document.getElementById('consulta-med').value = '';
+  document.getElementById('consulta-result').innerHTML = '';
+  document.getElementById('consulta-error').textContent = '';
+  setTimeout(() => document.getElementById('consulta-med').focus(), 300);
+}
+
+async function buscarFactura() {
+  await loadDataIfNeeded();
+  const med = document.getElementById('consulta-med').value.trim().toUpperCase();
+  const errEl = document.getElementById('consulta-error');
+  const resultEl = document.getElementById('consulta-result');
+
+  if (!med) { errEl.textContent = 'Ingresá el número de medidor.'; resultEl.innerHTML = ''; return; }
+
+  const u = usuarios.find(x => x.medidor.toUpperCase() === med);
+  if (!u) { errEl.textContent = 'No se encontró un usuario con ese medidor.'; resultEl.innerHTML = ''; return; }
+
+  const userLecturas = lecturas.filter(l => l.usuarioId === u.id).sort((a, b) => a.anio !== b.anio ? b.anio - a.anio : b.mes - a.mes);
+  if (!userLecturas.length) { errEl.textContent = 'Este usuario aún no tiene lecturas registradas.'; resultEl.innerHTML = ''; return; }
+
+  errEl.textContent = '';
+  const ultima = userLecturas[0];
+  resultEl.innerHTML = buildReciboHTML(ultima, u) + `
+    <div style="text-align:center;margin-top:10px">
+      <button class="btn btn-print" onclick="imprimirReciboPublico('${ultima.id}','${u.id}')"><i class="ti ti-printer"></i> Imprimir</button>
+    </div>`;
+}
+
+function imprimirReciboPublico(lid, uid) {
+  const l = lecturas.find(x => x.id === lid);
+  const u = usuarios.find(x => x.id === uid);
+  if (!l || !u) return;
+  const html = buildReciboHTML(l, u);
+  const w = window.open('', '_blank', 'width=500,height=600');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Recibo</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:20px;color:#000}
+    .recibo-preview h2{text-align:center;font-size:16px;color:#1565C0;margin-bottom:4px}
+    .sub{text-align:center;font-size:12px;color:#555;margin-bottom:14px}
+    .rrow{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px dotted #eee}
+    .rtotal{display:flex;justify-content:space-between;font-size:15px;font-weight:bold;padding:8px 0;margin-top:4px;border-top:2px solid #1565C0;color:#1565C0}
+    .firma{text-align:center;margin-top:20px;font-size:11px;color:#888;border-top:1px solid #ccc;padding-top:10px}
+  </style></head><body>${html}
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`);
+  w.document.close();
+}
+
 async function init() {
   if (!checkAuth()) {
     document.getElementById('login-screen').classList.remove('hidden');
