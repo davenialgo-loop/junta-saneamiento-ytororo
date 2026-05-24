@@ -22,11 +22,13 @@ function login(username, password) {
   return true;
 }
 
-function logout() {
+async function logout() {
   currentUser = null;
   sessionStorage.removeItem('yto_user');
   document.getElementById('page-admin').style.display = 'none';
   document.getElementById('page-landing').style.display = 'block';
+  await cargarNoticias();
+  renderNoticiasPublic();
 }
 
 function hasAccess(section) {

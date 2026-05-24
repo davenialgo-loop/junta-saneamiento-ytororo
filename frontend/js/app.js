@@ -32,9 +32,10 @@ function abrirLogin() {
   setTimeout(() => document.getElementById('login-user').focus(), 300);
 }
 
-function volverLanding() {
+async function volverLanding() {
   document.getElementById('page-admin').style.display = 'none';
   document.getElementById('page-landing').style.display = 'block';
+  if (!noticias.length) await cargarNoticias();
   renderNoticiasPublic();
 }
 

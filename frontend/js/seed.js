@@ -89,6 +89,7 @@ async function seedUsuarios() {
 }
 
 async function seedNoticias() {
+  await cargarNoticias();
   const ejemplos = [
     {
       titulo: 'Corte de agua programado',
