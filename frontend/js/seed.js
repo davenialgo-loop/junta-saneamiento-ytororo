@@ -30,7 +30,7 @@ function generarTelefono() {
   return prefijos[Math.floor(Math.random() * prefijos.length)] + ' ' + n;
 }
 
-function seedUsuarios() {
+async function seedUsuarios() {
   if (!currentUser || currentUser.role !== 'admin') { toast('Solo el administrador puede generar datos de prueba.'); return; }
   if (usuarios.length > 0 && !confirm('Ya hay usuarios registrados. ¿Agregar 100 usuarios de prueba igual?')) return;
 
@@ -80,10 +80,56 @@ function seedUsuarios() {
     }
   }
 
-  saveData().then(() => {
-    renderUsuarios();
-    renderDashboard();
-    renderHistorial();
-    toast('100 usuarios de prueba generados con lecturas de enero a mayo');
-  });
+  await seedNoticias();
+  await saveData();
+  renderUsuarios();
+  renderDashboard();
+  renderHistorial();
+  toast('Usuarios y noticias de prueba generados');
+}
+
+async function seedNoticias() {
+  const ejemplos = [
+    {
+      titulo: 'Corte de agua programado',
+      tipo: 'corte',
+      contenido: 'Se informa a todos los socios que el día martes 26 de mayo se realizará un corte programado del suministro de agua desde las 08:00 hasta las 12:00 horas por trabajos de mantenimiento en la red principal. Se recomienda tomar las precauciones necesarias y almacenar agua con anticipación. Disculpe las molestias.',
+      fecha: new Date(2026, 4, 25, 10, 0).toISOString()
+    },
+    {
+      titulo: 'Mantenimiento en red principal',
+      tipo: 'mantenimiento',
+      contenido: 'Se están realizando trabajos de reparación en la red principal sobre la Av. Ytororo. Durante el día de hoy podrían registrarse bajas de presión en el suministro. Agradecemos su paciencia mientras trabajamos para mejorar el servicio.',
+      fecha: new Date(2026, 4, 22, 8, 30).toISOString()
+    },
+    {
+      titulo: 'Convocatoria a asamblea general ordinaria',
+      tipo: 'asamblea',
+      contenido: 'Se convoca a todos los socios de la Junta de Saneamiento a la asamblea general ordinaria que se llevará a cabo el día lunes 15 de junio a las 19:00 horas en el local de la junta. Se tratarán temas importantes como balance general, proyectos de mejora y renovación de comisión. Esperamos contar con su presencia.',
+      fecha: new Date(2026, 4, 20, 15, 0).toISOString()
+    },
+    {
+      titulo: 'Horario de atención al público',
+      tipo: 'general',
+      contenido: 'Recordamos a todos los usuarios que el horario de atención al público en la oficina de la Junta de Saneamiento es de lunes a viernes de 07:00 a 12:00 y de 14:00 a 17:00 horas. Para reclamos y consultas también pueden comunicarse al teléfono 0981 000 000.',
+      fecha: new Date(2026, 4, 18, 9, 0).toISOString()
+    },
+    {
+      titulo: 'Recordatorio de pago mensual',
+      tipo: 'general',
+      contenido: 'Se recuerda a todos los usuarios que el vencimiento para el pago del servicio corresponde al día 10 de cada mes. Los pagos realizados después de esa fecha estarán sujetos a un recargo del 10% por mora según lo establecido en el reglamento. Acercarse a la oficina con su número de medidor.',
+      fecha: new Date(2026, 4, 15, 11, 0).toISOString()
+    }
+  ];
+
+  for (const ej of ejemplos) {
+    const n = { id: 'seed-noti-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6), ...ej, activa: true };
+    if (!noticias.find(x => x.titulo === ej.titulo)) {
+      noticias.push(n);
+      await dbAPI.put('noticias', n);
+    }
+  }
+
+  renderNoticiasPublic();
+  if (currentUser) renderNoticiasAdmin();
 }
